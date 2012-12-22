@@ -2,6 +2,11 @@
 
 open System
 
+
+(*  
+    Custom types
+*)
+
 type DataPoint(i:int) = 
     member this.data = i
     static member (+) (a:DataPoint, b:DataPoint) = DataPoint(a.data + b.data)
@@ -25,6 +30,11 @@ type Group = Cluster List
 
 type GroupingWithPrev = Group * Centroid list
 
+
+(*  
+    Helper methods
+*)
+
 let r = new Random()
                    
 let calculateCentroid (dataPointList:DataPoint List) = List.averageBy(fun i -> i) dataPointList
@@ -34,11 +44,23 @@ let distance (d1:DataPoint) (d2:DataPoint) =    let dist = d2 - d1
 
 let distAroundCentroid pt centroid : DistanceAroundCentroid = (pt, centroid, (distance centroid pt))
 
+
+(*  
+    Initial centroid logic to choose random data points (The Forgy Method)
+*)
+
 let initialCentroids (source:DataPoint array) count = 
         seq{
             for i in [0..count-1] do
                 yield source.[i]
         }
+
+
+(*  
+    Takes the input list and the current group of centroids.
+    Calculates the distance of each point from each centroid
+    then assigns the data point to the centroid that is closest.
+*)
 
 let assignCentroids (initialData:DataPoint list) (currentCentroids:Group) = 
         let dataByCentroid = 
@@ -69,6 +91,12 @@ let assignCentroids (initialData:DataPoint list) (currentCentroids:Group) =
 
 let extractCentroidsFromGroup group = List.map(fun (centroid, _) -> centroid) group
 
+
+(*  
+    Check if two lists are equal. Not reeeeeeeeeally reusable since it 
+    assumes the lists are of equal length...
+*)
+
 let rec compareLists l1 l2 = 
     match l1 with 
         | h1::t1 ->
@@ -81,12 +109,19 @@ let rec compareLists l1 l2 =
         | _ -> true
 
 
-let start data k = 
+(*  
+    Start with the input source and the clustering amount.
+    continue to cluster until the centroids stop changing
+    Returns a new "Group" type representing the centroid
+    and all the data points associated with it
+*)
+
+let cluster data k = 
     let startingCentroids:Group = initialCentroids (List.toArray data) k
                                     |> Seq.toList
                                     |> List.map (fun i -> (i,[]))
 
-    let rec start' (groupingWithPrev:GroupingWithPrev) count = 
+    let rec cluster' (groupingWithPrev:GroupingWithPrev) count = 
         if count = 0 then
             fst groupingWithPrev
         else
@@ -97,8 +132,8 @@ let start data k =
             if compareLists newCentroids previousCentroids then
                 newClusters
             else
-                start' (newClusters, newCentroids) (count - 1)
+                cluster' (newClusters, newCentroids) (count - 1)
 
-    start' (startingCentroids, extractCentroidsFromGroup startingCentroids) 10
+    cluster' (startingCentroids, extractCentroidsFromGroup startingCentroids) 10
 
     
