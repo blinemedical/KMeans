@@ -45,7 +45,8 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="KMeans.fs" />
+    <Compile Include="KMeans2.fs" />
+    <Compile Include="KDataTest.fs" />
     <None Include="App.config" />
   </ItemGroup>
   <PropertyGroup>
