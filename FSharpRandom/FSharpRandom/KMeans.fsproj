@@ -10,7 +10,7 @@
     <RootNamespace>FSharpRandom</RootNamespace>
     <AssemblyName>FSharpRandom</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <Name>FSharpRandom</Name>
+    <Name>KMeans</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
