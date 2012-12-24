@@ -18,7 +18,7 @@ Centroid 81
 
 Example usage
 
-```
+```fsharp
 module KDataTest
 
 open System
