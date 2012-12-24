@@ -25,6 +25,7 @@ KMeans.cluster initialDataSet kClusterValue
                                              ) s
                     if Seq.length pts > 30 then
                         printSeq (Seq.take 30 pts)
+                        Console.Write("...")
                     else
                         printSeq pts
 

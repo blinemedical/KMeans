@@ -19,20 +19,42 @@ Centroid 81
 Example usage
 
 ```
-let initialDataSet = Seq.init 100 (fun i -> new KMeans2.DataPoint(i))
+module KDataTest
+
+open System
+open KMeans
+
+Console.WriteLine("Generating data") |> ignore
+
+let initialDataSet = Seq.init 1000 (fun i ->  
+                                                if i % 100 = 0 then
+                                                    Console.Write(".")
+                                                new KMeans.DataPoint(i)) |> Seq.toList
+
+Console.WriteLine() |> ignore
+Console.WriteLine("Data generated") |> ignore
 
 let kClusterValue = 3
 
-KMeans2.cluster (Seq.toList initialDataSet) kClusterValue
-    |> List.iter(fun (centroid, pts) -> 
-                    Console.WriteLine("Centroid {0}, with data points:", centroid.data)
-                    List.iter(fun (pt:DataPoint) -> 
-                                    Console.Write("{0}, ", (pt.data.ToString()))
-                             ) pts
+KMeans.cluster initialDataSet kClusterValue
+    |> Seq.iter(fun (centroid, pts) -> 
+                    Console.WriteLine("Centroid {0}, with data points:", centroid.Data)
+
+                    let printSeq s = 
+                                    Seq.iter(fun (pt:DataPoint) -> 
+                                                    Console.Write("{0}, ", (pt.Data.ToString()))
+                                             ) s
+                    if Seq.length pts > 30 then
+                        printSeq (Seq.take 30 pts)
+                    else
+                        printSeq pts
+
                     Console.WriteLine()
                     Console.WriteLine()
                  )
+
+Console.ReadKey() |> ignore
 ```
 
-It's not very efficient since there are a lot of sequence/list conversions that should be removed.  Also the data point only works for integer rights now, but can be easily tweaked to support anything. To be fair I'm not 100% sure this clustering is right, since I haven't validated it against any other known clustering, but from what I can tell it looks correct.  To update this to use an n-dimensional cluster you just need to update the data point class and its associated distance methods.  
+The data point only works for 1 dimensional values rights now, but can be easily tweaked to support any dimension by changing the data point class. 
 

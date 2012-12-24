@@ -18,13 +18,13 @@ type DataPoint(i:int) =
     static member DivideByInt(d:DataPoint, n:int) = DataPoint(d.Data / n)
     static member Distance (d1:DataPoint) (d2:DataPoint) = 
                                     let dist = d2 - d1
-                                    Math.Abs(dist.Data)
+                                    sqrt(((float)dist.Data)**2.0)
 
 type Centroid = DataPoint
 
 type Cluster = Centroid * DataPoint List
 
-type Distance = int
+type Distance = float
 
 type DistanceAroundCentroid = DataPoint * Centroid * Distance
 
