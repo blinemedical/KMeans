@@ -56,5 +56,4 @@ KMeans.cluster initialDataSet kClusterValue
 Console.ReadKey() |> ignore
 ```
 
-The data point only works for 1 dimensional values rights now, but can be easily tweaked to support any dimension by changing the data point class. 
-
+The data point only works for 1 dimensional values rights now, but can be easily tweaked to support any dimension by changing the data point class's inputs and operator overloads
