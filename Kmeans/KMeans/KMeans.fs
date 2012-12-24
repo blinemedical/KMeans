@@ -46,15 +46,15 @@ let private calculateCentroidForPts (dataPointList:DataPoint List) =
     let nDimesionalEmptyList = List.init firstElem.Dimensions (fun i-> 0.0)
     let addedDimensions =
             List.fold(fun acc (dataPoint:DataPoint) -> 
-                            let rec addPoints list1 list2 = 
+                            let rec addPoints list1 list2 accumulator = 
                                 if List.length list1 = 0 then
-                                    []
+                                    accumulator
                                 else
                                     let head1 = List.head list1
                                     let head2 = List.head list2
-                                    (head1 + head2)::(addPoints (List.tail list1) (List.tail list2))
+                                    addPoints (List.tail list1) (List.tail list2) ((head1 + head2)::accumulator)
 
-                            addPoints acc dataPoint.Data
+                            addPoints acc dataPoint.Data []
              ) nDimesionalEmptyList dataPointList
 
     // scale the nDimensional sums by the size
