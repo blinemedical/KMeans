@@ -58,40 +58,20 @@ Centroid [83.5; 83.5], with data points:
 Example usage
 
 ```fsharp
-module KDataTest
-
-open System
 open KMeans
 
-Console.WriteLine("Generating data") |> ignore
-
-let initialDataSet = Seq.init 100 (fun i ->  
-                                                if i % 100 = 0 then
-                                                    Console.Write(".")
-                                                new KMeans.DataPoint([(float)i])) |> Seq.toList
-
-Console.WriteLine() |> ignore
-Console.WriteLine("Data generated") |> ignore
-
+let dimensions = 2
+let dataPoints = 100
 let kClusterValue = 3
+let maxIterations = Int32.MaxValue
+let convergenceDelta = 5.0 // if the distnace between subsequent cluster calculations is less than this then we can 
+                           // just assume the clusters have converged enough. this is to keep clusters from never converging
 
-KMeans.cluster initialDataSet kClusterValue
-    |> Seq.iter(fun (centroid, pts) -> 
-                    Console.WriteLine("Centroid {0}, with data points:", centroid.Data)
 
-                    let printSeq s = 
-                                    Seq.iter(fun (pt:DataPoint) -> 
-                                                    Console.Write("{0}, ", (pt.Data.ToString()))
-                                             ) s
-                    if Seq.length pts > 30 then
-                        printSeq (Seq.take 30 pts)
-                        Console.Write("...")
-                    else
-                        printSeq pts
-
-                    Console.WriteLine()
-                    Console.WriteLine()
-                 )
+let sampleData : KMeans.DataPoint list = KMeans.generateData dataPoints dimensions
+                           
+KMeans.clusterWithIterationLimit sampleData kClusterValue maxIterations convergenceDelta
+    |> Seq.iter(KMeans.displayClusterInfo)
 
 Console.ReadKey() |> ignore
 ```

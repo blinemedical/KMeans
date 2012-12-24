@@ -34,32 +34,80 @@ type Clusters = Cluster List
 
 type ClustersAndOldCentroids = Clusters * Centroid list
 
-(*  
-    Helper methods
+(* Initial data and display methods *)
+
+let generateData numPoints numDimensions = 
+    let r = new Random()
+    
+    Console.WriteLine("Generating data") |> ignore
+
+    let initialDataSet = Seq.init numPoints (fun i ->  
+                                                    if i % (numPoints/10) = 0 then
+                                                        Console.Write(".")
+                                                
+                                                    let nDimesionPoints = List.init numDimensions (fun i -> (float)(r.Next(0, numPoints))) 
+                                                    new DataPoint(nDimesionPoints)
+                                       ) |> Seq.toList
+
+    Console.WriteLine() |> ignore
+    Console.WriteLine("Data generated") |> ignore 
+
+    initialDataSet
+
+let displayClusterInfo (cluster:Cluster) = 
+    let (centroid, pts) = cluster
+    Console.WriteLine("Centroid {0}, with data points:", centroid.Data)
+
+    let printSeq s = 
+                    Seq.iter(fun (pt:DataPoint) -> 
+                                    Console.Write("{0}, ", (pt.Data.ToString()))
+                                ) s
+    if Seq.length pts > 30 then
+        printSeq (Seq.take 30 pts)
+        Console.Write("...")
+    else
+        printSeq pts
+
+    Console.WriteLine()
+    Console.WriteLine()
+
+(* CLUSTERING *)
+
+(*  goes through two lists and adds each element together
+    i.e. index 1 with index 1, index 2 with index2
+    and returns a new list of the items aggregated
 *)
 
-// take each float list representing an nDimesional space for every data point
-// and average each dimesion together.  I.e. element 1 for each point gets averaged togehter
-// and element 2 gets averaged together.  This new float list is the new nDimesional centroid
+let rec private aggregateLists list1 list2 accumulator operator = 
+        if List.length list1 = 0 then
+            accumulator
+        else
+            let head1 = List.head list1
+            let head2 = List.head list2
+            aggregateLists (List.tail list1) (List.tail list2) ((operator head1 head2)::accumulator) operator
+
+(*
+    take each float list representing an nDimesional space for every data point
+    and average each dimesion together.  I.e. element 1 for each point gets averaged togehter
+    and element 2 gets averaged together.  This new float list is the new nDimesional centroid
+*)
+
 let private calculateCentroidForPts (dataPointList:DataPoint List) = 
     let firstElem = List.head dataPointList
     let nDimesionalEmptyList = List.init firstElem.Dimensions (fun i-> 0.0)
-    let addedDimensions =
-            List.fold(fun acc (dataPoint:DataPoint) -> 
-                            let rec addPoints list1 list2 accumulator = 
-                                if List.length list1 = 0 then
-                                    accumulator
-                                else
-                                    let head1 = List.head list1
-                                    let head2 = List.head list2
-                                    addPoints (List.tail list1) (List.tail list2) ((head1 + head2)::accumulator)
-
-                            addPoints acc dataPoint.Data []
-             ) nDimesionalEmptyList dataPointList
+    let addedDimensions = List.fold(fun acc (dataPoint:DataPoint) -> aggregateLists acc dataPoint.Data [] (+)) 
+                                nDimesionalEmptyList 
+                                dataPointList
 
     // scale the nDimensional sums by the size
     let newCentroid = List.map(fun pt -> pt/((float)(List.length dataPointList))) addedDimensions
     new DataPoint(newCentroid)        
+
+(* 
+    given a point and a centroid, returns a new tuple
+    representing the point, the centroid its related to, and the distance from
+    the centroid for that point
+*)
 
 let private distFromCentroid pt centroid : DistanceAroundCentroid = (pt, centroid, (DataPoint.Distance centroid pt))
 
@@ -74,7 +122,6 @@ let private initialCentroids (source:DataPoint array) count =
             for i in [0..count-1] do
                 yield source.[r.Next(0, source.Length - 1)]
         }
-
 
 (*  
     Takes the input list and the current group of centroids.
@@ -137,7 +184,21 @@ let rec private compareLists l1 l2 =
             | _ -> true
 
 
-let clusterWithIterationLimit data k limit =
+// calculate the distance between all the centroids from the current round
+// and the lsat round. if all the centroids haven't really moved much
+// i.e. their distances is within the delta
+// then assume we have converged and return true            
+let private acceptableDelta (prev:Centroid list) (curr:Centroid list) delta = 
+        let extractData centroid = List.map(fun (c:Centroid) -> c.Data) centroid
+        
+        let errors = 
+                    List.map2(fun (prevCentr:Centroid) (currCentroid:Centroid) ->
+                                    Centroid.Distance prevCentr currCentroid
+                             ) prev curr
+                                
+        List.forall(fun i -> i <= delta) errors
+            
+let clusterWithIterationLimit data k limit delta =
     let initialClusters:Clusters = initialCentroids (List.toArray data) k
                                     |> Seq.toList
                                     |> List.map (fun i -> (i,[]))
@@ -150,7 +211,10 @@ let clusterWithIterationLimit data k limit =
             let previousCentroids = snd groupingWithPrev
             let newCentroids = extractCentroidsFromClusters newClusters
 
+            // clusters didnt change
             if compareLists newCentroids previousCentroids then
+                newClusters
+            else if acceptableDelta previousCentroids newCentroids delta then
                 newClusters
             else
                 cluster' (newClusters, newCentroids) (count - 1)
@@ -166,4 +230,3 @@ let clusterWithIterationLimit data k limit =
 let cluster data k = clusterWithIterationLimit data k Int32.MaxValue
     
 
-    
