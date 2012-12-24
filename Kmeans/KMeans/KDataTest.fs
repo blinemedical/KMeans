@@ -3,7 +3,7 @@
 open System
 open KMeans
 
-let dimensions = 2
+let dimensions = 4
 let dataPoints = 100
 let kClusterValue = 3
 let maxIterations = Int32.MaxValue

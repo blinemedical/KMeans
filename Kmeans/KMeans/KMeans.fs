@@ -197,6 +197,18 @@ let private acceptableDelta (prev:Centroid list) (curr:Centroid list) delta =
                              ) prev curr
                                 
         List.forall(fun i -> i <= delta) errors
+   
+(*  
+    Start with the input source and the clustering amount 
+    but also take in a max iteration limit as well as a converge
+    delta.
+
+    continue to cluster until the centroids stop changing or
+    the iteration limit is reached OR the converge delta is achieved
+
+    Returns a new "Clusters" type representing the centroid
+    and all the data points associated with it
+*)
             
 let clusterWithIterationLimit data k limit delta =
     let initialClusters:Clusters = initialCentroids (List.toArray data) k
@@ -219,7 +231,9 @@ let clusterWithIterationLimit data k limit delta =
             else
                 cluster' (newClusters, newCentroids) (count - 1)
 
-    cluster' (initialClusters, extractCentroidsFromClusters initialClusters) limit            
+    cluster' (initialClusters, extractCentroidsFromClusters initialClusters) limit      
+    
+          
 (*  
     Start with the input source and the clustering amount.
     continue to cluster until the centroids stop changing
