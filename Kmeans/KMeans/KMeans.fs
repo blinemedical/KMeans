@@ -6,19 +6,21 @@ open System
     Custom types and aliases
 *)
 
-type DataPoint(i:int) = 
-    member this.Data = i
-    static member (+) (a:DataPoint, b:DataPoint) = DataPoint(a.Data + b.Data)
-    static member (-) (a:DataPoint, b:DataPoint) = DataPoint(a.Data - b.Data)
-    static member Zero = DataPoint(0)
+type DataPoint(input:float list) = 
+    member this.Data = input
+    member this.Dimensions = List.length input
     override x.Equals(yobj) =
         match yobj with
         | :? DataPoint as y -> (x.Data = y.Data)
         | _ -> false
-    static member DivideByInt(d:DataPoint, n:int) = DataPoint(d.Data / n)
     static member Distance (d1:DataPoint) (d2:DataPoint) = 
-                                    let dist = d2 - d1
-                                    sqrt(((float)dist.Data)**2.0)
+                                    if List.length d1.Data <> List.length d2.Data then
+                                        0.0
+                                    else
+                                        let sums = List.fold2(fun acc d1Item d2Item ->
+                                                                     acc + (d2Item - d1Item)**2.0
+                                                              ) 0.0 d1.Data d2.Data
+                                        sqrt(sums)
 
 type Centroid = DataPoint
 
@@ -36,7 +38,23 @@ type ClustersAndOldCentroids = Clusters * Centroid list
     Helper methods
 *)
 
-let private calculateCentroidForPts (dataPointList:DataPoint List) = List.averageBy(fun i -> i) dataPointList
+let private calculateCentroidForPts (dataPointList:DataPoint List) = 
+    let firstElem = List.head dataPointList
+    let nDimesionalEmptyList = List.init firstElem.Dimensions (fun i-> 0.0)
+    let addedDimensions =
+            List.fold(fun acc (dataPoint:DataPoint) -> 
+                            let rec addPoints list1 list2 = 
+                                match list1 with
+                                    | [] -> list1
+                                    | h::t -> 
+                                                let listHead = List.head list2
+                                                (h + listHead)::(addPoints t (List.tail list2))
+                            addPoints acc dataPoint.Data
+             ) nDimesionalEmptyList dataPointList
+
+    // scale the nDimensional sums by the dimension
+    let newCentroid = List.map(fun pt -> pt/((float)(List.length dataPointList))) addedDimensions
+    new DataPoint(newCentroid)        
 
 let private distFromCentroid pt centroid : DistanceAroundCentroid = (pt, centroid, (DataPoint.Distance centroid pt))
 

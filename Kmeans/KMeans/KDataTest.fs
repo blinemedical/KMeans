@@ -5,10 +5,10 @@ open KMeans
 
 Console.WriteLine("Generating data") |> ignore
 
-let initialDataSet = Seq.init 1000 (fun i ->  
+let initialDataSet = Seq.init 100 (fun i ->  
                                                 if i % 100 = 0 then
                                                     Console.Write(".")
-                                                new KMeans.DataPoint(i)) |> Seq.toList
+                                                new KMeans.DataPoint([(float)i; (float)i])) |> Seq.toList
 
 Console.WriteLine() |> ignore
 Console.WriteLine("Data generated") |> ignore
