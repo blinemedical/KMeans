@@ -47,11 +47,13 @@ let private calculateCentroidForPts (dataPointList:DataPoint List) =
     let addedDimensions =
             List.fold(fun acc (dataPoint:DataPoint) -> 
                             let rec addPoints list1 list2 = 
-                                match list1 with
-                                    | [] -> list1
-                                    | h::t -> 
-                                                let listHead = List.head list2
-                                                (h + listHead)::(addPoints t (List.tail list2))
+                                if List.length list1 = 0 then
+                                    []
+                                else
+                                    let head1 = List.head list1
+                                    let head2 = List.head list2
+                                    (head1 + head2)::(addPoints (List.tail list1) (List.tail list2))
+
                             addPoints acc dataPoint.Data
              ) nDimesionalEmptyList dataPointList
 
