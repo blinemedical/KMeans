@@ -137,14 +137,7 @@ let rec private compareLists l1 l2 =
             | _ -> true
 
 
-(*  
-    Start with the input source and the clustering amount.
-    continue to cluster until the centroids stop changing
-    Returns a new "Clusters" type representing the centroid
-    and all the data points associated with it
-*)
-
-let cluster data k = 
+let clusterWithIterationLimit data k limit =
     let initialClusters:Clusters = initialCentroids (List.toArray data) k
                                     |> Seq.toList
                                     |> List.map (fun i -> (i,[]))
@@ -162,6 +155,15 @@ let cluster data k =
             else
                 cluster' (newClusters, newCentroids) (count - 1)
 
-    cluster' (initialClusters, extractCentroidsFromClusters initialClusters) 10
+    cluster' (initialClusters, extractCentroidsFromClusters initialClusters) limit            
+(*  
+    Start with the input source and the clustering amount.
+    continue to cluster until the centroids stop changing
+    Returns a new "Clusters" type representing the centroid
+    and all the data points associated with it
+*)
+
+let cluster data k = clusterWithIterationLimit data k Int32.MaxValue
+    
 
     
