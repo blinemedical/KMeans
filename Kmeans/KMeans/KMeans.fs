@@ -38,6 +38,9 @@ type ClustersAndOldCentroids = Clusters * Centroid list
     Helper methods
 *)
 
+// take each float list representing an nDimesional space for every data point
+// and average each dimesion together.  I.e. element 1 for each point gets averaged togehter
+// and element 2 gets averaged together.  This new float list is the new nDimesional centroid
 let private calculateCentroidForPts (dataPointList:DataPoint List) = 
     let firstElem = List.head dataPointList
     let nDimesionalEmptyList = List.init firstElem.Dimensions (fun i-> 0.0)
@@ -52,7 +55,7 @@ let private calculateCentroidForPts (dataPointList:DataPoint List) =
                             addPoints acc dataPoint.Data
              ) nDimesionalEmptyList dataPointList
 
-    // scale the nDimensional sums by the dimension
+    // scale the nDimensional sums by the size
     let newCentroid = List.map(fun pt -> pt/((float)(List.length dataPointList))) addedDimensions
     new DataPoint(newCentroid)        
 
