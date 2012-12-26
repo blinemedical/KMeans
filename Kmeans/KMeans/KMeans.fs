@@ -78,13 +78,13 @@ let displayClusterInfo (cluster:Cluster) =
     and returns a new list of the items aggregated
 *)
 
-let rec private aggregateLists list1 list2 accumulator operator = 
+let rec private addListElements list1 list2 accumulator operator = 
         if List.length list1 = 0 then
             accumulator
         else
             let head1 = List.head list1
             let head2 = List.head list2
-            aggregateLists (List.tail list1) (List.tail list2) ((operator head1 head2)::accumulator) operator
+            addListElements (List.tail list1) (List.tail list2) ((operator head1 head2)::accumulator) operator
 
 (*
     take each float list representing an nDimesional space for every data point
@@ -95,7 +95,7 @@ let rec private aggregateLists list1 list2 accumulator operator =
 let private calculateCentroidForPts (dataPointList:DataPoint List) = 
     let firstElem = List.head dataPointList
     let nDimesionalEmptyList = List.init firstElem.Dimensions (fun i-> 0.0)
-    let addedDimensions = List.fold(fun acc (dataPoint:DataPoint) -> aggregateLists acc dataPoint.Data [] (+)) 
+    let addedDimensions = List.fold(fun acc (dataPoint:DataPoint) -> addListElements acc dataPoint.Data [] (+)) 
                                 nDimesionalEmptyList 
                                 dataPointList
 
@@ -133,15 +133,9 @@ let private assignCentroids (rawDataList:DataPoint list) (currentCentroids:Clust
         let dataPointsWithCentroid = 
             rawDataList 
                 |> List.map(fun pt -> 
-                                    let ptAroundCentroids = List.map(fun cluster -> 
-                                                                            let centroid = (fst cluster)
-                                                                            distFromCentroid pt centroid) currentCentroids
-                                    let nearestCentroid = List.minBy(fun (distance:DistanceAroundCentroid) ->
-                                                                            let (_, cent, dist) = distance
-                                                                            dist) ptAroundCentroids
-                                    let (_, cent, _) = nearestCentroid
-
-                                    (pt, cent)
+                                    let currentPointByEachCentroid = List.map(fun (centroid, _) -> distFromCentroid pt centroid) currentCentroids
+                                    let (_, nearestCentroid, _) = List.minBy(fun (_, _, distance) -> distance) currentPointByEachCentroid
+                                    (pt, nearestCentroid)
                             )
         
         (*
@@ -169,7 +163,7 @@ let private extractCentroidsFromClusters (clusters:Clusters) = List.map(fun (cen
     Check if two lists are equal. 
 *)
 
-let rec private compareLists l1 l2 = 
+let rec private listsEqual l1 l2 = 
     if not (List.length l1 = List.length l2) then
         false
     else
@@ -177,7 +171,7 @@ let rec private compareLists l1 l2 =
             | h1::t1 ->
                 match l2 with 
                     | h2::t2 -> if h1 = h2 then
-                                  compareLists t1 t2
+                                  listsEqual t1 t2
                                 else
                                   false
                     | _ -> true
@@ -188,7 +182,7 @@ let rec private compareLists l1 l2 =
 // and the lsat round. if all the centroids haven't really moved much
 // i.e. their distances is within the delta
 // then assume we have converged and return true            
-let private acceptableDelta (prev:Centroid list) (curr:Centroid list) delta = 
+let private centroidsDeltaMinimzed (prev:Centroid list) (curr:Centroid list) delta = 
         let extractData centroid = List.map(fun (c:Centroid) -> c.Data) centroid
         
         let errors = 
@@ -209,24 +203,27 @@ let private acceptableDelta (prev:Centroid list) (curr:Centroid list) delta =
     Returns a new "Clusters" type representing the centroid
     and all the data points associated with it
 *)
+
+let private getClusters (cluster:ClustersAndOldCentroids) = fst cluster
+let private getOldCentroids (cluster:ClustersAndOldCentroids) = snd cluster
             
 let clusterWithIterationLimit data k limit delta =
     let initialClusters:Clusters = initialCentroids (List.toArray data) k
                                     |> Seq.toList
                                     |> List.map (fun i -> (i,[]))
 
-    let rec cluster' (groupingWithPrev:ClustersAndOldCentroids) count = 
+    let rec cluster' (clustersWithOldCentroids:ClustersAndOldCentroids) count = 
         if count = 0 then
-            fst groupingWithPrev
+            getClusters clustersWithOldCentroids
         else
-            let newClusters = assignCentroids data (fst groupingWithPrev)
-            let previousCentroids = snd groupingWithPrev
+            let newClusters = assignCentroids data (getClusters clustersWithOldCentroids)
+            let previousCentroids = getOldCentroids clustersWithOldCentroids
             let newCentroids = extractCentroidsFromClusters newClusters
 
             // clusters didnt change
-            if compareLists newCentroids previousCentroids then
+            if listsEqual newCentroids previousCentroids then
                 newClusters
-            else if acceptableDelta previousCentroids newCentroids delta then
+            else if centroidsDeltaMinimzed previousCentroids newCentroids delta then
                 newClusters
             else
                 cluster' (newClusters, newCentroids) (count - 1)
@@ -241,6 +238,6 @@ let clusterWithIterationLimit data k limit delta =
     and all the data points associated with it
 *)
 
-let cluster data k = clusterWithIterationLimit data k Int32.MaxValue
+let cluster data k = clusterWithIterationLimit data k Int32.MaxValue 0.0
     
 
