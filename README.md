@@ -76,4 +76,7 @@ KMeans.clusterWithIterationLimit sampleData kClusterValue maxIterations converge
 Console.ReadKey() |> ignore
 ```
 
-Disclaimer: I'm not 100% sure the nDimesional centroid calculation is correct. I have it set up that it is the average of each dimesion, but I am not sure that is correct. If it's not right let me know!
+Disclaimer
+====
+
+I'm not 100% sure the nDimesional centroid calculation is correct. I have it set up that it is the average of each dimesion, but I am not sure that is correct. If it's not right let me know!
