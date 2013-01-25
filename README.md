@@ -80,3 +80,5 @@ Disclaimer
 ====
 
 I'm not 100% sure the nDimesional centroid calculation is correct. I have it set up that it is the average of each dimesion, but I am not sure that is correct. If it's not right let me know!
+
+http://tech.blinemedical.com/k-means-step-by-step-in-f/
